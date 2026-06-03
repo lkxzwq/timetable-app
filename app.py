@@ -359,27 +359,16 @@ with tab3:
                     else:
                         st.info("当前周次范围内没有找到共同空闲时间")
 
-# ====================== 侧边栏配置 ======================
+# ====================== 侧边栏配置（上线优化版） ======================
 st.sidebar.header("⚙️ 配置")
 
-new_key = st.sidebar.text_input(
-    "SiliconFlow API Key", 
-    value=st.session_state.siliconflow_key, 
-    type="password",
-    help="用于图片识别"
-)
+# 只显示提示，不显示输入框（防止 Key 泄露）
+st.sidebar.success("✅ API Key 已通过 Secrets 配置")
+st.sidebar.caption("图片识别功能已可用")
 
-col1, col2 = st.sidebar.columns(2)
-with col1:
-    if st.sidebar.button("💾 保存 Key"):
-        st.session_state.siliconflow_key = new_key
-        save_api_key(new_key)
-        st.success("✅ API Key 已保存！")
-with col2:
-    if st.sidebar.button("🗑️ 清除 Key"):
-        if os.path.exists(CONFIG_FILE):
-            os.remove(CONFIG_FILE)
-        st.session_state.siliconflow_key = ""
-        st.success("Key 已清除")
-
-st.sidebar.caption("输入 Key 后可使用图片识别功能")
+# 如果想在本地测试时保留输入框，可以保留下面注释部分
+# new_key = st.sidebar.text_input("SiliconFlow API Key", value=st.session_state.siliconflow_key, type="password")
+# if st.sidebar.button("💾 保存 Key"):
+#     st.session_state.siliconflow_key = new_key
+#     save_api_key(new_key)
+#     st.success("Key 已保存")
