@@ -57,17 +57,17 @@ def parse_timetable(image_bytes):
 
     # 图片压缩
     img = Image.open(io.BytesIO(image_bytes))
-    img.thumbnail((800, 800))
+    img.thumbnail((700, 700))
     buffered = io.BytesIO()
-    img.save(buffered, format="JPEG", quality=85)
+    img.save(buffered, format="JPEG", quality=80)
     base64_image = base64.b64encode(buffered.getvalue()).decode()
 
     try:
         with st.spinner("AI 正在解析课表..."):
             response = client.chat.completions.create(
-                model="PaddlePaddle/PaddleOCR-VL-1.5",   # 使用你列表中的OCR专用模型
+                model="Qwen/Qwen3-VL-8B-Instruct",   # 使用你列表中的视觉模型
                 messages=[
-                    {"role": "system", "content": "你是一个严谨的中文大学课表解析专家。请严格只输出JSON数组，不要任何其他文字。"},
+                    {"role": "system", "content": "你是一个严谨的中文大学课表解析专家。请严格只输出JSON数组，不要任何其他文字、解释或markdown。"},
                     {"role": "user", "content": [
                         {
                             "type": "image_url",
@@ -75,7 +75,7 @@ def parse_timetable(image_bytes):
                         },
                         {
                             "type": "text",
-                            "text": """请仔细解析这张课表图片，提取所有课程信息，并严格按照以下JSON数组格式输出：
+                            "text": """请严格按照以下格式输出JSON数组，不要任何其他内容：
 [
   {
     "course_name": "高等数学",
@@ -90,13 +90,17 @@ def parse_timetable(image_bytes):
                         }
                     ]}
                 ],
-                max_tokens=1500,
+                max_tokens=1200,
                 temperature=0.0
             )
             
             result = response.choices[0].message.content.strip()
-            if "```" in result:
-                result = result.split("```json")[-1].split("```")[0].strip()
+            
+            # 强力清理
+            if "```json" in result:
+                result = result.split("```json")[1].split("```")[0].strip()
+            elif "```" in result:
+                result = result.split("```")[1].strip()
             
             return json.loads(result)
             
