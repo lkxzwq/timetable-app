@@ -55,27 +55,27 @@ def parse_timetable(image_bytes):
 
     client = OpenAI(api_key=st.session_state.siliconflow_key, base_url="https://api.siliconflow.cn/v1")
 
-    # 强力压缩图片 + 最快模型
+    # 图片压缩
     img = Image.open(io.BytesIO(image_bytes))
-    img.thumbnail((512, 512))
+    img.thumbnail((800, 800))
     buffered = io.BytesIO()
-    img.save(buffered, format="JPEG", quality=70)
+    img.save(buffered, format="JPEG", quality=85)
     base64_image = base64.b64encode(buffered.getvalue()).decode()
 
     try:
-        with st.spinner("🚀 快速解析中..."):
+        with st.spinner("AI 正在解析课表..."):
             response = client.chat.completions.create(
-                model="Qwen/Qwen2.5-VL-7B-Instruct",
+                model="PaddlePaddle/PaddleOCR-VL-1.5",   # 使用你列表中的OCR专用模型
                 messages=[
                     {"role": "system", "content": "你是一个严谨的中文大学课表解析专家。请严格只输出JSON数组，不要任何其他文字。"},
                     {"role": "user", "content": [
                         {
                             "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}", "detail": "low"}
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}", "detail": "high"}
                         },
                         {
                             "type": "text",
-                            "text": """请严格按照以下格式输出JSON数组：
+                            "text": """请仔细解析这张课表图片，提取所有课程信息，并严格按照以下JSON数组格式输出：
 [
   {
     "course_name": "高等数学",
@@ -90,17 +90,19 @@ def parse_timetable(image_bytes):
                         }
                     ]}
                 ],
-                max_tokens=800,
+                max_tokens=1500,
                 temperature=0.0
             )
+            
             result = response.choices[0].message.content.strip()
             if "```" in result:
                 result = result.split("```json")[-1].split("```")[0].strip()
+            
             return json.loads(result)
+            
     except Exception as e:
         st.error(f"解析失败: {str(e)}")
         return None
-
 
 # ====================== 辅助函数（必须放在这里） ======================
 def has_week(weeks_str, week_start, week_end):
