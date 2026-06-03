@@ -29,8 +29,9 @@ def save_api_key(key):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump({"siliconflow_key": key}, f, ensure_ascii=False)
 
+# 使用 Streamlit Secrets（云端安全方式）
 if "siliconflow_key" not in st.session_state:
-    st.session_state.siliconflow_key = load_api_key()
+    st.session_state.siliconflow_key = st.secrets["general"]["siliconflow_key"]
 
 # ====================== 数据库 ======================
 def init_database():
