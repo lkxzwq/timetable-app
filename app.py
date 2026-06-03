@@ -221,7 +221,20 @@ def find_common_free_time(selected_users, week_start, week_end):
     total = len(free_df)
     summary = f"• 共找到 **{total}** 个共同空闲时间段\n• 最长连续空闲约 **2-3小时**"
     return free_df, summary
-    
+
+# ====================== 缓存优化查询 ======================
+@st.cache_data(ttl=180)  # 缓存3分钟，加快加载
+def get_courses_by_user(user_name):
+    conn = sqlite3.connect("timetable.db")
+    df = pd.read_sql_query("""
+        SELECT id, course_name, teacher, location, weeks, day_of_week, start_time, end_time
+        FROM courses c 
+        JOIN users u ON c.user_id = u.user_id 
+        WHERE u.name = ?
+    """, conn, params=(user_name,))
+    conn.close()
+    return df
+
 # ====================== 主界面 ======================
 tab1, tab2, tab3 = st.tabs(["📤 导入课表", "📅 我的课表", "👥 多人叠加 & 找空闲"])
 
