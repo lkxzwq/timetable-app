@@ -279,30 +279,33 @@ with tab1:
 
 # ====================== Tab 2: 我的课表（颜色块 + 手动添加 + 编辑） ======================
 with tab2:
-    st.subheader("📅 我的周课表（颜色块 + 手动添加）")
+    st.subheader("📅 我的周课表")
     view_name = st.text_input("输入你的姓名", placeholder="张三", key="view_name_tab2")
-    selected_week = st.slider("选择要查看的周次", 1, 17, 1)
+    selected_week = st.slider("选择周次", 1, 17, 1)
     
-    # 手动添加按钮
-    if st.button("➕ 手动新增课程", type="primary"):
+    # 查看按钮
+    if st.button("🔍 查看第 {} 周课表".format(selected_week), type="primary"):
+        if not view_name:
+            st.warning("请输入姓名")
+        else:
+            df = get_courses_by_user(view_name)
+            
+            if df.empty:
+                st.warning(f"未找到 {view_name} 的课表记录")
+            else:
+                # 筛选当前周
+                current_df = df[df['weeks'].apply(lambda x: has_week(x, selected_week, selected_week))]
+                
+                if current_df.empty:
+                    st.info(f"第 {selected_week} 周没有课程安排")
+                else:
+                    st.success(f"第 {selected_week} 周课表（共 {len(current_df)} 门课）")
+                    st.data_editor(current_df, use_container_width=True, hide_index=True, key="course_editor")
+    
+    # 手动添加课程按钮
+    if st.button("➕ 手动新增课程"):
         st.session_state.show_add_form = True
 
-    # 显示当前周课表
-    if view_name:
-        df = get_courses_by_user(view_name)
-        
-        if df.empty:
-            st.info("暂无课表记录，请先添加课程")
-        else:
-            # 筛选当前周
-            current_df = df[df['weeks'].apply(lambda x: has_week(x, selected_week, selected_week))]
-            
-            if current_df.empty:
-                st.info(f"第 {selected_week} 周没有课程安排")
-            else:
-                st.success(f"第 {selected_week} 周课表（共 {len(current_df)} 门课）")
-                st.data_editor(current_df, use_container_width=True, hide_index=True, key="editor")
-    
     # 新增课程表单
     if st.session_state.get("show_add_form", False):
         st.subheader("新增课程")
