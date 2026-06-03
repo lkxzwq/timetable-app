@@ -13,26 +13,15 @@ st.set_page_config(page_title="课表管理系统", layout="wide")
 st.title("📅 智能课表管理系统")
 st.caption("支持图片识别 · 手动添加 · 多周管理 · 多人叠加")
 
-# ====================== API Key 永久保存 ======================
-CONFIG_FILE = "config.json"
-
-def load_api_key():
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f).get("siliconflow_key", "")
-        except:
-            return ""
-    return ""
-
-def save_api_key(key):
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump({"siliconflow_key": key}, f, ensure_ascii=False)
-
-# 使用 Streamlit Secrets（云端安全方式）
+# ====================== API Key（云端部署使用 Secrets） ======================
 if "siliconflow_key" not in st.session_state:
-    st.session_state.siliconflow_key = st.secrets["general"]["siliconflow_key"]
-
+    try:
+        # 从 Streamlit Secrets 读取（上线后使用）
+        st.session_state.siliconflow_key = st.secrets["general"]["siliconflow_key"]
+    except:
+        # 本地测试时兼容（可选）
+        st.session_state.siliconflow_key = ""
+        st.sidebar.warning("⚠️ 未设置 API Key，请在 Streamlit Secrets 中配置")
 # ====================== 数据库 ======================
 def init_database():
     conn = sqlite3.connect("timetable.db")
