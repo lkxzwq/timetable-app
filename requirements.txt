@@ -1,0 +1,5 @@
+streamlit
+pandas
+pillow
+openai
+psycopg2-binary
